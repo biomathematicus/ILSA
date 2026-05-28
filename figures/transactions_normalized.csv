@@ -1,0 +1,79 @@
+date,source,description,category,amount,gross,month
+2024-09-19,TCB,DDA REGULAR DEPOSIT,grant_income,200.0,200.0,2024-09
+2024-10-10,PayPal,Donation Payment,recurring_income,4.41,5.0,2024-10
+2024-10-10,PayPal,Donation Payment,recurring_income,9.31,10.0,2024-10
+2024-11-06,PayPal,Donation Payment,recurring_income,979.61,1000.0,2024-11
+2024-11-08,TCB,TOTAL SERVICE CHARGES,bank_fee,-0.58,-0.58,2024-11
+2024-11-08,TCB,POSTAGE FEE - NON E-STATEMENTS,bank_fee,-0.58,-0.58,2024-11
+2024-11-12,PayPal,Subscription Payment,recurring_income,244.53,250.0,2024-11
+2024-11-13,TCB,DDA REGULAR DEPOSIT,grant_income,25000.0,25000.0,2024-11
+2024-11-20,PayPal,Donation Payment,recurring_income,19.11,20.0,2024-11
+2024-12-12,PayPal,Subscription Payment,recurring_income,244.53,250.0,2024-12
+2025-01-12,PayPal,Subscription Payment,recurring_income,244.53,250.0,2025-01
+2025-02-11,PayPal,Donation Payment,recurring_income,979.61,1000.0,2025-02
+2025-02-12,PayPal,Subscription Payment,recurring_income,244.53,250.0,2025-02
+2025-02-19,TCB,DDA REGULAR DEPOSIT,grant_income,1000.0,1000.0,2025-02
+2025-03-12,PayPal,Subscription Payment,recurring_income,244.53,250.0,2025-03
+2025-03-20,PayPal,Donation Payment,recurring_income,254.34,260.0,2025-03
+2025-03-25,PayPal,Subscription Payment,recurring_income,52.0,53.56,2025-03
+2025-03-28,TCB,DOLLYWOOD  DOLLYWOOD FOUND CCD 621348105D,program_expense,-206.77,-206.77,2025-03
+2025-04-12,PayPal,Subscription Payment,recurring_income,244.53,250.0,2025-04
+2025-04-25,PayPal,Subscription Payment,recurring_income,52.0,53.56,2025-04
+2025-04-28,TCB,DOLLYWOOD  DOLLYWOOD FOUND CCD 621348105D,program_expense,-189.79,-189.79,2025-04
+2025-05-12,PayPal,Subscription Payment,recurring_income,244.53,250.0,2025-05
+2025-05-15,PayPal,Donation Payment,recurring_income,40.0,41.31,2025-05
+2025-05-20,TCB,DDA REGULAR DEPOSIT,grant_income,2075.0,2075.0,2025-05
+2025-05-25,PayPal,Subscription Payment,recurring_income,52.0,53.56,2025-05
+2025-05-28,TCB,DOLLYWOOD  DOLLYWOOD FOUND CCD 621348105D,program_expense,-331.29,-331.29,2025-05
+2025-06-12,PayPal,Subscription Payment,recurring_income,244.53,250.0,2025-06
+2025-06-25,PayPal,Subscription Payment,recurring_income,52.0,53.56,2025-06
+2025-06-30,TCB,DOLLYWOOD  DOLLYWOOD FOUND CCD 621348105D,program_expense,-604.0,-604.0,2025-06
+2025-07-11,TCB,DDA REGULAR DEPOSIT,grant_income,30000.0,30000.0,2025-07
+2025-07-12,PayPal,Subscription Payment,recurring_income,244.53,250.0,2025-07
+2025-07-25,PayPal,Subscription Payment,recurring_income,52.0,53.56,2025-07
+2025-07-28,TCB,DOLLYWOOD  DOLLYWOOD FOUND CCD 621348105D,program_expense,-634.81,-634.81,2025-07
+2025-08-11,PayPal,User Initiated Withdrawal,internal_transfer,-4747.16,-4747.16,2025-08
+2025-08-12,TCB,TRANSFER   PAYPAL PPD PAYPALSD11,internal_transfer,4747.16,4747.16,2025-08
+2025-08-12,PayPal,Subscription Payment,recurring_income,244.53,250.0,2025-08
+2025-08-25,PayPal,Subscription Payment,recurring_income,52.0,53.56,2025-08
+2025-08-28,TCB,DOLLYWOOD  DOLLYWOOD FOUND CCD 621348105D,program_expense,-783.38,-783.38,2025-08
+2025-09-12,PayPal,Subscription Payment,recurring_income,244.53,250.0,2025-09
+2025-09-23,TCB,BONTERRATE BONTERRATECH.COM CCD 4270465600 ST-W4U5B3S1M6K9,recurring_income,20.0,20.0,2025-09
+2025-09-24,TCB,BONTERRATE BONTERRATECH.COM CCD 1800948598 ST-F0M2T0P5E3H6,recurring_income,100.0,100.0,2025-09
+2025-09-25,PayPal,Subscription Payment,recurring_income,52.0,53.56,2025-09
+2025-09-25,TCB,BONTERRATE BONTERRATECH.COM CCD 4270465600 ST-D9Q8K4Z8D8D7,recurring_income,242.0,242.0,2025-09
+2025-09-29,TCB,DOLLYWOOD  DOLLYWOOD FOUND CCD 621348105D,program_expense,-904.09,-904.09,2025-09
+2025-10-02,PayPal,Donation Payment,recurring_income,48.51,50.0,2025-10
+2025-10-12,PayPal,Subscription Payment,recurring_income,244.53,250.0,2025-10
+2025-10-25,PayPal,Subscription Payment,recurring_income,52.0,53.56,2025-10
+2025-10-28,TCB,DOLLYWOOD  DOLLYWOOD FOUND CCD 621348105D,program_expense,-1010.92,-1010.92,2025-10
+2025-11-12,PayPal,Subscription Payment,recurring_income,244.53,250.0,2025-11
+2025-11-25,PayPal,Subscription Payment,recurring_income,52.0,53.56,2025-11
+2025-11-28,TCB,DOLLYWOOD  DOLLYWOOD FOUND CCD 621348105D,program_expense,-1712.25,-1712.25,2025-11
+2025-12-12,PayPal,Subscription Payment,recurring_income,244.53,250.0,2025-12
+2025-12-16,PayPal,Subscription Payment,recurring_income,734.58,750.0,2025-12
+2025-12-17,PayPal,Express Checkout Payment,recurring_income,4.36,5.0,2025-12
+2025-12-18,TCB,DDA REGULAR DEPOSIT,grant_income,93.22,93.22,2025-12
+2025-12-18,TCB,DDA REGULAR DEPOSIT,grant_income,110000.0,110000.0,2025-12
+2025-12-25,PayPal,Subscription Payment,recurring_income,52.0,53.56,2025-12
+2025-12-29,TCB,DOLLYWOOD  DOLLYWOOD FOUND CCD 621348105D,program_expense,-1766.51,-1766.51,2025-12
+2026-01-16,PayPal,Subscription Payment,recurring_income,734.58,750.0,2026-01
+2026-01-25,PayPal,Subscription Payment,recurring_income,52.0,53.56,2026-01
+2026-01-28,TCB,DOLLYWOOD  DOLLYWOOD FOUND CCD 621348105D,program_expense,-1804.81,-1804.81,2026-01
+2026-02-25,PayPal,Subscription Payment,recurring_income,52.0,53.56,2026-02
+2026-03-02,TCB,DOLLYWOOD  DOLLYWOOD FOUND CCD 621348105D,program_expense,-2214.08,-2214.08,2026-03
+2026-03-20,TCB,DDA REGULAR DEPOSIT,grant_income,15050.0,15050.0,2026-03
+2026-03-24,TCB,DDA REGULAR DEPOSIT,grant_income,500.0,500.0,2026-03
+2026-03-25,PayPal,Subscription Payment,recurring_income,52.0,53.56,2026-03
+2026-03-27,TCB,CHARGEBACK 16182028,income_reversal,-500.0,-500.0,2026-03
+2026-04-11,PayPal,Express Checkout Payment,recurring_income,4.41,5.0,2026-04
+2026-04-17,TCB,DDA REGULAR DEPOSIT,grant_income,2029.13,2029.13,2026-04
+2026-04-24,PayPal,Bank Deposit to PP Account,internal_transfer,41.0,41.0,2026-04
+2026-04-24,PayPal,Website Payment,internal_transfer,-41.0,-41.0,2026-04
+2026-04-25,PayPal,Subscription Payment,recurring_income,52.0,53.56,2026-04
+2026-04-27,TCB,INST XFER  PAYPAL WEB,internal_transfer,-41.0,-41.0,2026-04
+2026-04-28,PayPal,Mass Pay Payment,recurring_income,50.0,50.0,2026-04
+2026-05-01,PayPal,Express Checkout Payment,recurring_income,48.01,50.0,2026-05
+2026-05-18,TCB,DDA REGULAR DEPOSIT,grant_income,2100.0,2100.0,2026-05
+2026-05-25,PayPal,Subscription Payment,recurring_income,52.0,53.56,2026-05
+2026-05-28,PayPal,Express Checkout Payment,recurring_income,18.91,20.0,2026-05
