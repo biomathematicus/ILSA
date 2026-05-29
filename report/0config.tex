@@ -4,6 +4,8 @@
 \usepackage{longtable}
 \usepackage{morefloats}
 \usepackage{enumitem}
+\usepackage{amsmath}   % aligned equations, matrices (Methodology appendix)
+\usepackage{amssymb}   % \mathbb etc.
 %\setpapersize{letterpaper}
 \setmargins{3.5cm}%			% left edge
 		   {2.5cm}%     % top edge
@@ -23,6 +25,7 @@
 % ********* Graphics definition *******
 \usepackage[pdftex]{graphicx} % required to import graphic files
 \graphicspath{{../figures/}{./}} % generated figures live in /figures; assets (logo, Areas) stay local
+\usepackage{tcolorbox} % "Key Finding" callout boxes (loaded after graphicx to avoid option clash)
 \usepackage{color} %allows to mark some entries in the tables with color
 \usepackage{eso-pic} % these two are required to add the little picture on top of every page
 \usepackage{everyshi} % these two are required to add the little picture on top of every page
@@ -132,8 +135,15 @@ contents={
 \definecolor{Output}{rgb}{0.0,0.0,1.0} % blue
 \definecolor{SrcBckgrnd}{rgb}{0.95,0.95,0.95} % blue
 \definecolor{HW}{rgb}{0.8,0.0,0.0} % red
-\definecolor{UTSABlue}{rgb}{0.047,0.137,0.251} 
-\definecolor{UTSAOrange}{rgb}{0.945,0.353,0.133} 
+\definecolor{UTSABlue}{rgb}{0.047,0.137,0.251}
+\definecolor{UTSAOrange}{rgb}{0.945,0.353,0.133}
+
+% "Key Finding" callout box used to highlight critical results in the report body.
+\newtcolorbox{keyfinding}[1][Key Finding]{%
+  colback=UTSABlue!6!white, colframe=UTSABlue, coltitle=white,
+  fonttitle=\bfseries\sffamily, title={#1}, fontupper=\sffamily,
+  boxrule=0.7pt, arc=2.5pt, left=7pt, right=7pt, top=5pt, bottom=5pt,
+  before skip=10pt, after skip=10pt}
 \newcommand\textstyleInput[1]{\texttt{\textbf{\textcolor[rgb]{0.0,0.45,0.0}{#1}}}}
 \newcommand\textstyleOutput[1]{\texttt{{\textcolor[rgb]{0.0,0.75,0.0}{#1}}}} 
 

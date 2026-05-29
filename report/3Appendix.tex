@@ -1,0 +1,247 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Methodology appendix. Static prose; live figures via \ilsa... macros.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Methodology}
+\label{app:methodology}
+
+This appendix documents the data sources, the consolidation and classification
+model, the statistical estimators, and the forward population model behind every
+figure in this report. The toolchain treats the report not as a document that is
+typed, but as a \emph{reproducible artifact built deterministically from primary
+financial records}. The same inputs regenerate byte-comparable outputs on every
+run, and no number in the narrative is entered by hand: each is computed by code
+from the consolidated ledger or the original invoices and injected into the prose
+as a \LaTeX{} macro. An auditor can therefore trace any figure backward ---
+narrative $\rightarrow$ generated macro $\rightarrow$ generating function
+$\rightarrow$ ledger or invoice row $\rightarrow$ original bank, PayPal, or DPIL
+record.
+
+\section{Design principles}
+
+Three principles govern the design.
+
+\begin{itemize}
+  \item \textbf{Transparency.} All analysis reads one consolidated ledger
+        (\texttt{ILSA\_full\_ledger.xlsx}) and the original Dollywood invoice
+        PDFs. Transaction categorization lives in readable code, not in private
+        spreadsheet judgment, so any reviewer can inspect and challenge the rules.
+        Internal PayPal\,$\leftrightarrow$\,bank sweeps are detected and netted out
+        so each gift is counted once.
+  \item \textbf{Rigor.} Income is split into \emph{recurring} giving
+        (forecastable) and \emph{episodic} grants and major gifts (shown discretely,
+        never trended). Program cost is reported on an \emph{accrual} basis (the
+        invoiced amount) and reconciled to \emph{cash} (bank payments). Every
+        forward assumption is a named constant, and the projections carry an
+        explicit $\pm$\ilsaScenBand{}/year uncertainty band.
+  \item \textbf{Reproducibility.} A single shared model feeds the report, the
+        figures, the tables, and the planning workbook, so they are mathematically
+        incapable of disagreeing. The pipeline is parameterized by reporting period
+        and is replayable end to end.
+\end{itemize}
+
+\section{Repository organization and build pipeline}
+
+The project separates \emph{primary records}, a \emph{shared model}, and three
+\emph{deliverables}. The shared library is never run directly; both the report
+and the workbook import it, which is what guarantees they reconcile.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|l|p{9.2cm}|}
+\hline
+\textbf{Component} & \textbf{Role} \\
+\hline
+\texttt{ILSA\_full\_ledger.xlsx} & Single source of truth: bank (TCB) and PayPal exports, hand-merged. \\
+\texttt{invoices/*.pdf} & Primary-source Dollywood invoices. \\
+\texttt{parse\_invoices.py} & Parses each invoice PDF into \texttt{invoices/summary.csv}. \\
+\texttt{ilsa\_ledger.py} & \textbf{Shared model.} Loads and consolidates the ledger, nets internal transfers, builds the monthly table, the invoice (accrual) model, and the projection. \\
+\texttt{treasurer.py} & Builds the report: figures, CSV summaries, and \texttt{ILSA-commands.tex}. \\
+\texttt{cohort\_explore.py} & Age-structured cohort model; generates the Section~2.3 figures and macros. \\
+\texttt{running\_budget.py} & Builds the planning workbook \texttt{ILSA\_running\_budget.xlsx}. \\
+\hline
+\end{tabular}
+\caption{Repository components and their roles.}
+\end{table}
+
+\noindent\textbf{Data flow.} Raw exports are merged into the consolidated ledger
+and invoices are parsed into \texttt{summary.csv}. The shared library consolidates
+both into the monthly model. \texttt{treasurer.py} emits the figures and a file of
+\verb|\newcommand| definitions (\texttt{ILSA-commands.tex}); the prose files
+(\texttt{FiscalReport.tex}, \texttt{2Report.tex}) reference only those macros, so
+the wording stays editable while the numbers stay generated. The document is
+compiled twice with \texttt{pdflatex} so the \texttt{lastpage} total page count
+resolves.
+
+\section{Data sources and consolidation}
+
+Each ledger row is normalized to a common schema: posting \emph{date}, \emph{source}
+(TCB or PayPal), \emph{description}, \emph{category}, signed \emph{amount} (net of
+fees), and \emph{gross} (pre-fee). Bank amounts are signed by their credit/debit
+flag; PayPal amounts use the \texttt{Net} field (fees included) with \texttt{Gross}
+retained for donor-intent reporting. Rows are sorted by date and stamped with a
+monthly period.
+
+Invoices are parsed line by line. Each monthly invoice lists, per age group
+(Group~1--6) and language, the book quantity and dollar amount, plus three
+non-group items: welcome books (\texttt{LETC}), graduation books (\texttt{GRAD}),
+and a per-piece mailing charge. The parser is robust to two invoice layouts,
+recovers the printed total where present (falling back to the sum of line items),
+and \emph{de-duplicates} re-exported invoices by their DPIL invoice number ---
+keeping the most complete copy --- so a re-export can never double-count.
+Promotional invoices (e.g.\ lapel pins) are detected and excluded from program
+totals.
+
+\section{Transaction classification}
+
+Categorization is rule-based and auditable. Bank descriptions map to categories by
+keyword: \texttt{DOLLYWOOD} $\rightarrow$ program cost; \texttt{BONTERRA}
+$\rightarrow$ recurring giving; \texttt{DDA}/\texttt{DEPOSIT} $\rightarrow$ grant or
+major gift; \texttt{FEE}/\texttt{SERVICE CHARGE} $\rightarrow$ bank fee;
+\texttt{CHARGEBACK} $\rightarrow$ income reversal; \texttt{PAYPAL}/\texttt{INST XFER}
+$\rightarrow$ internal transfer. PayPal rows are recurring giving unless they are
+withdrawals, bank-funded deposits, or the pending bank-link wash, which are
+internal. Internal transfers are excluded from both income and expense, so a
+donation swept from PayPal to the bank is counted once (when received), never again
+when the funds move.
+
+\section{The invoice line-item model and enrollment conservation}
+
+Reading the invoices as an age-structured population requires understanding how a
+child appears on a given month's invoice. Empirically, the three recipient sets are
+\emph{disjoint}: a continuing child receives a group book, a newly enrolled child
+receives only a welcome book that month (entering an age group the following month),
+and a graduating child receives a graduation book as they exit. Consequently the
+mailing quantity equals the children served,
+\begin{equation}
+\text{kids}(M) \;=\; \underbrace{\textstyle\sum_{g} G_g(M)}_{\text{group books}}
+              \;+\; \text{LETC}(M) \;+\; \text{GRAD}(M)
+              \;=\; \text{mailing pieces}(M),
+\end{equation}
+and the group roll obeys a one-month conservation law,
+\begin{equation}
+\sum_g G_g(M) \;=\; \sum_g G_g(M-1) \;+\; \text{LETC}(M-1) \;-\; \text{GRAD}(M).
+\label{eq:conservation}
+\end{equation}
+Equation~\eqref{eq:conservation} holds across the observed period with residuals of
+a few children per month, which both validates the enrollment rule and confirms that
+\texttt{LETC} is a clean measure of monthly inflow and \texttt{GRAD} of outflow.
+
+\section{Cash versus accrual program cost}
+
+The Dollywood Foundation \emph{invoices} a month's books (the cost incurred,
+\emph{accrual}); the bank \emph{payment} clears about a month later (\emph{cash}).
+Empirically the invoiced amount for month $M$ matches the bank payment recorded in
+month $M\!+\!1$. The report therefore states program cost on the accrual basis,
+with cash retained for the reserve position so reserves still tie to money on hand;
+the cumulative difference is the outstanding payable, \ilsaProgramPayable{}. The
+effective per-child program cost is the ratio of invoiced cost to children served
+over billed months,
+\begin{equation}
+c \;=\; \frac{\sum_M \text{accrual}(M)}{\sum_M \text{kids}(M)} \;\approx\; \ilsaCohortCostPerChild{}\ \text{per child served},
+\end{equation}
+which blends the age-group books, welcome and graduation books, and per-piece
+mailing.
+
+\section{Trend estimation by ordinary least squares}
+
+Forecastable series are extrapolated with a first-degree ordinary least-squares
+(OLS) fit on the sequential month index. For observations $\{(t_i, y_i)\}_{i=0}^{n-1}$
+with $t_i = i$, the line $\hat{y} = \beta_0 + \beta_1 t$ minimizes the residual sum
+of squares $\sum_i (y_i - \beta_0 - \beta_1 t_i)^2$, giving the closed form
+\begin{equation}
+\beta_1 \;=\; \frac{\sum_i (t_i-\bar{t})(y_i-\bar{y})}{\sum_i (t_i-\bar{t})^2},
+\qquad
+\beta_0 \;=\; \bar{y} - \beta_1\,\bar{t}.
+\end{equation}
+Forward values are clamped to be non-negative, $\hat{y}_t = \max(\beta_0 + \beta_1 t,\,0)$.
+This estimator is applied to three monthly series: recurring giving (slope
+\ilsaRecurringSlope{}/month), invoiced program cost (slope \ilsaProgramSlope{}/month),
+and the enrollment inflow \texttt{LETC} (slope \ilsaCohortLetcSlope{}/month). Because
+\texttt{LETC} contains two campaign-driven spikes, its linear slope is upward-biased
+relative to the non-campaign baseline; the corresponding projection is read as
+upper-leaning, and the $\pm$\ilsaScenBand{}/year band brackets the uncertainty.
+
+\section{Reserve projection and scenario bands}
+
+Let $R_0$ be the current cash reserve and $\hat{I}_k,\hat{E}_k$ the OLS
+extrapolations of recurring income and program cost for future month $k$. The
+baseline reserve path accumulates projected net cash flow,
+\begin{equation}
+R_k \;=\; R_0 \;+\; \sum_{j=1}^{k} \bigl(\hat{I}_j - \hat{E}_j\bigr).
+\end{equation}
+The optimistic and pessimistic scenarios scale each month's net flow by a factor
+that compounds with elapsed years $\tau_k = k/12$,
+\begin{equation}
+R_k^{\pm} \;=\; R_0 \;+\; \sum_{j=1}^{k} \bigl(\hat{I}_j - \hat{E}_j\bigr)\,(1 \pm \beta)^{\tau_j},
+\qquad \beta = \ilsaScenBand{},
+\end{equation}
+where the pessimistic case uses $(1+\beta)$ (a widening deficit) and the optimistic
+case $(1-\beta)$. No new grants are assumed, so all three paths are deliberately
+conservative. The horizon runs to \ilsaScenEnd{}; under the baseline, reserves
+reach \ilsaProjCashEnd{} at the horizon.
+
+\section{The age-structured cohort model}
+
+The forward enrollment and commitment figures come from a discrete-time,
+age-structured population model --- a Leslie progression matrix without fecundity,
+driven by an exogenous recruitment term. Enrollment is tracked in monthly
+age-of-enrollment classes $a \in \{0,1,\dots,71\}$ (six annual groups
+$\times$ twelve months); let $\mathbf{n}(t) \in \mathbb{R}^{72}$ be the population
+vector, with group $g$ occupying classes $[12(g-1),\,12g)$. The model is seeded from
+the latest group pyramid, distributed uniformly within each group,
+$n_a(0) = G_g/12$ for $a$ in group $g$.
+
+Each month every child ages one class, the oldest class graduates out, and new
+children are recruited according to an intake distribution $\mathbf{w}$ (with
+$\sum_a w_a = 1$):
+\begin{equation}
+\mathbf{n}(t+1) \;=\; \mathbf{A}\,\mathbf{n}(t) \;+\; R(t)\,\mathbf{w},
+\qquad
+\mathbf{A} =
+\begin{pmatrix}
+0 & 0 & \cdots & 0 & 0 \\
+1 & 0 & \cdots & 0 & 0 \\
+0 & 1 & \cdots & 0 & 0 \\
+\vdots & & \ddots & & \vdots \\
+0 & 0 & \cdots & 1 & 0
+\end{pmatrix},
+\label{eq:cohort}
+\end{equation}
+where the sub-diagonal shift matrix $\mathbf{A}$ advances each class and discards
+class~71 (graduation). The number graduating in month $t$ is $n_{71}(t)$; total
+enrollment is $N(t) = \sum_a n_a(t)$ and monthly program cost is $c\,N(t)$.
+
+\paragraph{Recruitment.} $R(t)$ is the OLS extrapolation of the observed
+\texttt{LETC} inflow (clamped at zero), optionally scaled by the
+$(1\pm\beta)^{\tau}$ band. Graduation is endogenous --- it emerges from aging
+Equation~\eqref{eq:cohort}, not from a separate assumption.
+
+\paragraph{Intake age.} The \emph{age} at which new children enter is not directly
+observed, so two intake distributions bracket it. The \emph{today's-mix} scenario
+spreads recruits across classes in proportion to the current pyramid,
+$w_a = p_g/12$ for $a$ in group $g$ (where $p_g$ is the current stock share of
+group $g$); the \emph{birth-fed} scenario routes all recruits to birth,
+$\mathbf{w} = \mathbf{e}_0$. Because the current pyramid is inverted (older-skewed),
+today's mix graduates sooner and birth-fed carries a full six-year tail; the two
+bracket the long-run liability.
+
+\paragraph{Commitment runoff.} Setting $R \equiv 0$ runs the existing population off
+to graduation and measures the locked-in obligation. A child in class $a$ owes
+$72-a$ further monthly books, so the remaining commitment is
+\begin{equation}
+\text{Commitment} \;=\; c \sum_{a=0}^{71} (72 - a)\, n_a,
+\end{equation}
+which evaluates to \ilsaCohortRunoffTotal{} for the current roster --- the floor on
+future program cost, assuming no new enrollment and no attrition.
+
+\section{Reproducibility and limitations}
+
+The pipeline is deterministic and parameterized by reporting period and projection
+horizon; re-running the scripts and compiling twice reproduces the report exactly.
+Sources are plain-text and diffable. The principal limitations are stated honestly:
+linear extrapolation is sensitive to the two enrollment campaigns in the
+\texttt{LETC} series; the intake age is unobserved (hence the two-scenario band);
+attrition and voluntary disenrollment are not modeled; the recurring-giving trend is
+sensitive to a small number of large early gifts; and the cash/accrual payable
+reflects payment timing rather than any discrepancy in the underlying records.

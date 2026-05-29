@@ -625,8 +625,10 @@ def build_for_report(out_dir=OUT_DIR):
     proj = build_projection(qty, inv, cost)
     proj_table = projection_table(qty, proj)
 
+    plot_enrollment_by_group(qty, out_dir)
     plot_age_structure(qty, out_dir)
     plot_observed_flows(qty, inv, proj, out_dir)
+    plot_runoff_children(qty, matrix, out_dir)
     plot_runoff_dollars(qty, sched, out_dir)
     plot_enrollment_projection(qty, proj, out_dir)
     plot_cost_projection(qty, proj, out_dir)

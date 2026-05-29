@@ -36,6 +36,17 @@ by enrolling older children, rather than one fed primarily by newborns.
 \label{fig:cohort-pyramid}
 \end{figure}
 
+The program has scaled rapidly --- from a handful of children in early 2025 to
+over a thousand today --- and the stacked history (Figure~\ref{fig:cohort-history})
+shows how each age group has filled in as enrollment has grown.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{cohort/enrollment_by_group.png}
+\caption{Monthly enrollment by age group since program launch, showing both total growth and the shifting age composition.}
+\label{fig:cohort-history}
+\end{figure}
+
 \subsection{Observed Enrollment Flows}
 
 The invoices now make the enrollment dynamics directly observable
@@ -55,11 +66,27 @@ projection below should be read as an upper-leaning estimate of recruitment.
 
 \subsection{Locked-in Commitment}
 
-Even if enrollment stopped today, the children already on the rolls obligate
-ILSA to \ilsaCohortRunoffTotal{} of future books (\ilsaCohortBookMonths{}
-book-months) as each cohort ages to graduation over the next five years
-(Figure~\ref{fig:cohort-runoff}). This is the floor on program cost: it assumes
-no new enrollment and no attrition.
+\begin{keyfinding}[Locked-in commitment]
+Even if enrollment stopped today, the children already on the rolls obligate ILSA
+to \ilsaCohortRunoffTotal{} of future books (\ilsaCohortBookMonths{} book-months) as
+each cohort ages to graduation. This is the floor on program cost --- it assumes no
+new enrollment and no attrition.
+\end{keyfinding}
+
+In headcount terms, the current cohort winds down from \ilsaCohortKids{} children
+today to zero within six years as each group reaches graduation, with the oldest
+groups (Group~6) leaving first and today's youngest children (Group~1) the last to
+graduate (Figure~\ref{fig:cohort-runoff-kids}).
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{cohort/runoff_children.png}
+\caption{Commitment runoff in children: today's enrolled population aged forward with no new enrollment, stacked by the group each child is in today.}
+\label{fig:cohort-runoff-kids}
+\end{figure}
+
+The same runoff in dollars (Figure~\ref{fig:cohort-runoff}) gives the annual
+committed cost and the cumulative remaining obligation.
 
 \begin{figure}[h]
 \centering
@@ -91,6 +118,14 @@ By \ilsaCohortProjYear{}, enrollment reaches \ilsaCohortProjTodayKids{} children
 \ilsaCohortProjTodayCost{} to \ilsaCohortProjBirthCost{}, and a locked-in future
 commitment of \ilsaCohortProjTodayCommit{} to \ilsaCohortProjBirthCommit{}. The
 intake mix is the dominant lever on the long-run liability.
+
+\begin{keyfinding}[The intake age is the dominant lever]
+By \ilsaCohortProjYear{}, monthly program cost reaches \ilsaCohortProjTodayCost{} to
+\ilsaCohortProjBirthCost{}. The age at which new children enroll drives the long-run
+liability: the locked-in commitment ranges from \ilsaCohortProjTodayCommit{}
+(older-skew intake, as currently observed) to \ilsaCohortProjBirthCommit{}
+(birth-fed, a matured program).
+\end{keyfinding}
 
 \begin{table}[h]
 \centering
