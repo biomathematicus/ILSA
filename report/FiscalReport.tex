@@ -23,8 +23,11 @@ at the close of the period.
     \item \textbf{Grants and major gifts} (deposited at the bank): \ilsaGrantTotal{}
           (\ilsaGrantPct{} of income) across \ilsaGrantCount{} deposits; the largest
           was \ilsaLargestGift{} in \ilsaLargestGiftMonth{}.
-    \item \textbf{Program cost} (monthly payments to the Dollywood Foundation for
-          book distribution): \ilsaProgramTotal{}.
+    \item \textbf{Program cost} (Imagination Library age-group, welcome, and
+          graduation books plus per-piece mailing): \ilsaProgramAccrual{} invoiced,
+          of which \ilsaProgramPaid{} has been paid in cash and
+          \ilsaProgramPayable{} remains an outstanding payable to the Dollywood
+          Foundation. Program cost averages \ilsaCostPerChild{} per child served.
 \end{itemize}
 
 Recurring giving \ilsaOpSentence{} This is the central dynamic of ILSA's finances:
@@ -64,11 +67,33 @@ are episodic by nature and are reported as discrete events rather than a trend.
 \ilsaExpenseYearTotal
 \hline
 \end{tabular}
-\caption{Operating expenses by calendar year. The program cost reflects \ilsaProgramCount{} payments to the Dollywood Foundation over \ilsaPeriod{}.}
+\caption{Operating expenses by calendar year, cash basis (Dollywood payments as cleared at the bank: \ilsaProgramCount{} payments over \ilsaPeriod{}). The invoiced (accrual) program cost is reconciled below.}
 \end{table}
 
 The program cost grows as enrollment increases, since ILSA pays per child served.
 It is the organization's dominant and steadily rising expense.
+
+\subsubsection*{Program Cost: Invoiced vs.\ Paid}
+
+The Dollywood Foundation bills monthly for welcome, age-group, and graduation books
+plus per-piece mailing. The \emph{invoiced} (accrual) amount is the cost incurred
+that month; cash payments clear about a month later, so cumulative invoiced minus
+paid is the outstanding payable. Reserves elsewhere in this report remain on the
+cash basis, so they continue to tie to actual money on hand.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|r|r|r|}
+\hline
+\textbf{Year} & \textbf{Invoiced (accrual)} & \textbf{Paid (cash)} & \textbf{Payable (cumulative)} \\
+\hline
+\ilsaProgramReconRows
+\hline
+\ilsaProgramReconTotal
+\hline
+\end{tabular}
+\caption{Program cost invoiced vs.\ paid, by calendar year. ``Payable'' is the cumulative invoiced-minus-paid balance owed to the Dollywood Foundation.}
+\end{table}
 
 \subsection{Cash Flow and Reserves}
 
@@ -110,8 +135,9 @@ improves the outlook. The practical implication is that sustaining and growing
 \subsection{Annual Operating Budget (\ilsaBudgetFyLabel)}
 
 The board adopted the following enrollment and program-cost budget for the fiscal
-year. Actual program cost is drawn from recorded Dollywood (Imagination Library)
-payments; months without a recorded payment are shown as ``---''.
+year. Actual kids are the children served each month (age-group $+$ welcome $+$
+graduation books mailed), and actual program cost is the invoiced (accrual) amount
+for that invoice month; months not yet invoiced are shown as ``---''.
 
 \begin{table}[h]
 \centering

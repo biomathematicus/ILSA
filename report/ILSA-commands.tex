@@ -3,24 +3,43 @@
 % The report body (FiscalReport.tex) inserts these commands.
 
 \newcommand{\ilsaBudgetFyLabel}{August 2025 -- July 2026}
-\newcommand{\ilsaBudgetRows}{Aug & 370 & 241 & \$900 & \$783 & \$117 \\
-Sep & 425 & 259 & \$1,000 & \$904 & \$96 \\
-Oct & 490 & 295 & \$1,200 & \$1,011 & \$189 \\
-Nov & 560 & 351 & \$1,350 & \$1,712 & -\$362 \\
-Dec & 650 & 385 & \$1,580 & \$1,767 & -\$187 \\
-Jan & 750 & 653 & \$1,800 & \$1,805 & -\$5 \\
-Feb & 850 & 720 & \$2,100 & --- & --- \\
-Mar & 980 & 728 & \$2,400 & \$2,214 & \$186 \\
-Apr & 1,120 & 905 & \$2,750 & --- & --- \\
-May & 1,300 & 957 & \$3,200 & --- & --- \\
-Jun & 1,500 & 1,000 & \$3,650 & --- & --- \\
+\newcommand{\ilsaBudgetRows}{Aug & 370 & 273 & \$900 & \$635 & \$265 \\
+Sep & 425 & 324 & \$1,000 & \$783 & \$217 \\
+Oct & 490 & 379 & \$1,200 & \$904 & \$296 \\
+Nov & 560 & 407 & \$1,350 & \$1,011 & \$339 \\
+Dec & 650 & 693 & \$1,580 & \$1,712 & -\$132 \\
+Jan & 750 & 751 & \$1,800 & \$1,767 & \$33 \\
+Feb & 850 & 756 & \$2,100 & \$1,805 & \$295 \\
+Mar & 980 & 939 & \$2,400 & \$2,214 & \$186 \\
+Apr & 1,120 & 1,002 & \$2,750 & \$2,313 & \$437 \\
+May & 1,300 & 1,039 & \$3,200 & \$2,387 & \$813 \\
+Jun & 1,500 & 1,099 & \$3,650 & \$2,635 & \$1,015 \\
 Jul & 1,700 & --- & \$4,200 & --- & --- \\}
-\newcommand{\ilsaBudgetTotal}{\textbf{Total} & --- & --- & \textbf{\$26,130} & \textbf{\$10,196} & \\}
+\newcommand{\ilsaBudgetTotal}{\textbf{Total} & --- & --- & \textbf{\$26,130} & \textbf{\$18,166} & \\}
 \newcommand{\ilsaCashflowYearRows}{Opening reserves & \$0 & \$26,700 & \$167,603 & \$0 \\
 Total income & \$26,702 & \$149,046 & \$20,795 & \$196,543 \\
 Total expenses & (\$1) & (\$8,144) & (\$4,519) & (\$12,664) \\
 \textbf{Net change} & \textbf{\$26,700} & \textbf{\$140,902} & \textbf{\$16,276} & \textbf{\$183,879} \\
 \textbf{Closing reserves} & \textbf{\$26,700} & \textbf{\$167,603} & \textbf{\$183,879} & \textbf{\$183,879} \\}
+\newcommand{\ilsaCohortBookMonths}{40,308}
+\newcommand{\ilsaCohortCostPerChild}{\$2.38}
+\newcommand{\ilsaCohortKids}{1,000}
+\newcommand{\ilsaCohortLetcAvg}{82}
+\newcommand{\ilsaCohortLetcSlope}{+4.4}
+\newcommand{\ilsaCohortProjBirthCommit}{\$1,137,557}
+\newcommand{\ilsaCohortProjBirthCost}{\$21,555}
+\newcommand{\ilsaCohortProjBirthKids}{9,055}
+\newcommand{\ilsaCohortProjRows}{Dec 2026 & 1,695 & 1,712 & \$4,035 & \$4,075 \\
+Dec 2027 & 3,357 & 3,567 & \$7,992 & \$8,491 \\
+Dec 2028 & 5,227 & 6,008 & \$12,443 & \$14,300 \\
+Dec 2029 & 7,174 & 9,055 & \$17,078 & \$21,555 \\}
+\newcommand{\ilsaCohortProjTodayCommit}{\$419,178}
+\newcommand{\ilsaCohortProjTodayCost}{\$17,078}
+\newcommand{\ilsaCohortProjTodayKids}{7,174}
+\newcommand{\ilsaCohortProjYear}{2029}
+\newcommand{\ilsaCohortRunoffTotal}{\$95,949}
+\newcommand{\ilsaCohortSnapshot}{June 2026}
+\newcommand{\ilsaCostPerChild}{\$2.38}
 \newcommand{\ilsaExpenseYearRows}{Program -- Imagination Library & \$0 & \$8,144 & \$4,019 & \$12,163 \\
 Other (fees, chargebacks) & \$1 & \$0 & \$500 & \$501 \\}
 \newcommand{\ilsaExpenseYearTotal}{\textbf{Total expenses} & \textbf{\$1} & \textbf{\$8,144} & \textbf{\$4,519} & \textbf{\$12,664} \\}
@@ -35,19 +54,25 @@ Grants \& major gifts (bank deposits) & \$25,200 & \$143,168 & \$19,679 & \$188,
 \newcommand{\ilsaLargestGiftMonth}{December 2025}
 \newcommand{\ilsaNMonths}{21}
 \newcommand{\ilsaNetChange}{\$183,879}
-\newcommand{\ilsaOpSentence}{did not fully cover this cost, leaving an operating deficit of \$3,668 that was funded from grants and accumulated reserves.}
+\newcommand{\ilsaOpSentence}{did not fully cover this cost, leaving an operating deficit of \$8,367 that was funded from grants and accumulated reserves.}
 \newcommand{\ilsaOpexRows}{Mail Box & \$350 & yearly &  \\}
 \newcommand{\ilsaOtherTotal}{\$501}
 \newcommand{\ilsaPeriod}{September 2024--May 2026}
+\newcommand{\ilsaProgramAccrual}{\$16,863}
 \newcommand{\ilsaProgramCount}{12}
 \newcommand{\ilsaProgramMonthly}{\$579}
-\newcommand{\ilsaProgramSlope}{\$61}
+\newcommand{\ilsaProgramPaid}{\$12,163}
+\newcommand{\ilsaProgramPayable}{\$4,700}
+\newcommand{\ilsaProgramReconRows}{2025 & \$6,377 & \$8,144 & -\$1,767 \\
+2026 & \$10,485 & \$4,019 & \$4,700 \\}
+\newcommand{\ilsaProgramReconTotal}{\textbf{Total} & \textbf{\$16,863} & \textbf{\$12,163} & \textbf{\$4,700} \\}
+\newcommand{\ilsaProgramSlope}{\$132}
 \newcommand{\ilsaProgramTotal}{\$12,163}
-\newcommand{\ilsaProjCashEnd}{\$80,193}
-\newcommand{\ilsaProjCashEndOpt}{\$110,478}
-\newcommand{\ilsaProjCashEndPess}{\$41,557}
-\newcommand{\ilsaProjCashOneYr}{\$167,908}
-\newcommand{\ilsaProjCashTwoYr}{\$141,847}
+\newcommand{\ilsaProjCashEnd}{-\$27,062}
+\newcommand{\ilsaProjCashEndOpt}{\$34,493}
+\newcommand{\ilsaProjCashEndPess}{-\$105,589}
+\newcommand{\ilsaProjCashOneYr}{\$151,174}
+\newcommand{\ilsaProjCashTwoYr}{\$98,161}
 \newcommand{\ilsaProjEndOneYr}{May 2027}
 \newcommand{\ilsaProjEndTwoYr}{May 2028}
 \newcommand{\ilsaRecurringMonthly}{\$405}
@@ -59,10 +84,10 @@ Grants \& major gifts (bank deposits) & \$25,200 & \$143,168 & \$19,679 & \$188,
 \newcommand{\ilsaReservesStart}{\$0}
 \newcommand{\ilsaScenBand}{15\%}
 \newcommand{\ilsaScenEnd}{December 2029}
-\newcommand{\ilsaScenReserveRows}{Dec 2026 & \$175,377 & \$175,789 & \$176,238 \\
-Dec 2027 & \$149,641 & \$153,932 & \$158,126 \\
-Dec 2028 & \$106,454 & \$121,984 & \$135,580 \\
-Dec 2029 & \$41,557 & \$80,193 & \$110,478 \\}
+\newcommand{\ilsaScenReserveRows}{Dec 2026 & \$166,424 & \$167,269 & \$168,190 \\
+Dec 2027 & \$113,970 & \$122,717 & \$131,270 \\
+Dec 2028 & \$26,295 & \$57,858 & \$85,494 \\
+Dec 2029 & -\$105,589 & -\$27,062 & \$34,493 \\}
 \newcommand{\ilsaTotalExpense}{\$12,664}
 \newcommand{\ilsaTotalIncome}{\$196,543}
 \newcommand{\ilsaYearA}{2024}

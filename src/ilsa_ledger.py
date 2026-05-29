@@ -173,6 +173,67 @@ def build_monthly(ledger):
 
 
 # --------------------------------------------------------------------------- #
+# Invoice (accrual) program model -- read from invoices/summary.csv
+# --------------------------------------------------------------------------- #
+def invoice_monthly(path=None):
+    """Per-invoice-month program model from ``invoices/summary.csv``.
+
+    Returns a DataFrame indexed by a gap-free monthly PeriodIndex with:
+      group_kids    group-book recipients (continuing enrollees)
+      letc          welcome books = new enrollments that month (inflow)
+      grad          graduation books = exits that month (outflow)
+      kids          group + LETC + GRAD = pieces mailed = children served
+      accrual_cost  program cost incurred that month = sum of the book amount
+                    columns (group + LETC + GRAD + mailing); promotional/non-book
+                    invoices contribute no book amounts and are excluded.
+      invoice_total printed invoice total(s) for the month (cross-check only)
+
+    A month with quantities but $0 of book amounts (an unbilled draft invoice)
+    gets ``accrual_cost = NaN`` so it is distinguishable from a true $0.
+    """
+    path = Path(path) if path else INVOICES_DIR / "summary.csv"
+    df = pd.read_csv(path)
+    df = df[df["month"].notna() & (df["month"].astype(str).str.strip() != "")].copy()
+    if df.empty:
+        return pd.DataFrame()
+
+    langs = ("EN", "ES")
+    group_q = [f"G{g}{l}_Q" for l in langs for g in range(1, 7)]
+    letc_q = [f"LETC_{l}_Q" for l in langs]
+    grad_q = [f"GRAD_{l}_Q" for l in langs]
+    amt_cols = [c for c in df.columns if c.endswith("_A")]  # all book amounts
+
+    def col_sum(frame, cols):
+        present = [c for c in cols if c in frame.columns]
+        return frame[present].apply(pd.to_numeric, errors="coerce").fillna(0).sum(axis=1)
+
+    df["_group"] = col_sum(df, group_q)
+    df["_letc"] = col_sum(df, letc_q)
+    df["_grad"] = col_sum(df, grad_q)
+    df["_amt"] = col_sum(df, amt_cols)
+    df["_total"] = pd.to_numeric(df.get("INVOICE_TOTAL", 0), errors="coerce").fillna(0)
+    df["_qty"] = df["_group"] + df["_letc"] + df["_grad"]
+    df["month"] = pd.PeriodIndex(df["month"].astype(str), freq="M")
+
+    g = df.groupby("month")
+    m = pd.DataFrame({
+        "group_kids": g["_group"].sum(),
+        "letc": g["_letc"].sum(),
+        "grad": g["_grad"].sum(),
+        "kids": g["_qty"].sum(),
+        "accrual_cost": g["_amt"].sum(),
+        "invoice_total": g["_total"].sum(),
+    })
+    full = pd.period_range(m.index.min(), m.index.max(), freq="M")
+    m = m.reindex(full, fill_value=0.0)
+    m.index.name = "month"
+    # Unbilled drafts: quantities present but no book amounts -> cost unknown.
+    draft = (m["accrual_cost"] == 0) & (m["kids"] > 0)
+    m.loc[draft, "accrual_cost"] = np.nan
+    return m
+
+
+# --------------------------------------------------------------------------- #
 # Forward projection model (shared by the report and the dashboard so every
 # deliverable tells one story). The BASELINE is the linear regression of
 # recurring income and program cost on past data; optimistic/pessimistic vary the
@@ -199,13 +260,15 @@ def horizon_to_end(last_period, end=SCENARIO_PROJECTION_END):
     return max(PROJECTION_MONTHS, (pd.Period(end, "M") - last_period).n)
 
 
-def project_period(monthly_period, horizon=PROJECTION_MONTHS):
+def project_period(monthly_period, horizon=PROJECTION_MONTHS, expense_col="program_expense"):
     """Baseline linear projection of recurring income, program cost, and reserves.
 
-    Returns None if there are too few months to fit a trend.
+    ``expense_col`` selects the program-cost series to trend (e.g. the invoiced
+    accrual series rather than the gappy cash payments). Returns None if there are
+    too few months to fit a trend.
     """
     rec = monthly_period["recurring_income"].values
-    prog = monthly_period["program_expense"].values
+    prog = monthly_period[expense_col].values
     n = len(rec)
     if n < 2:
         return None

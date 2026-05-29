@@ -39,6 +39,7 @@ from ilsa_ledger import (
     SCENARIO_BAND,
     build_monthly,
     horizon_to_end,
+    invoice_monthly,
     load_ledger,
     money,
     pct,
@@ -50,6 +51,11 @@ try:
     import parse_invoices
 except Exception:  # parsing is optional; report still builds without it
     parse_invoices = None
+
+try:
+    import cohort_explore  # age-structure cohort figures + commands (Section 2.x)
+except Exception:
+    cohort_explore = None
 
 # --------------------------------------------------------------------------- #
 # Forward budget plan (edit as the plan changes; actuals come from the ledger).
@@ -146,8 +152,8 @@ def plot_income_expense_actual(monthly, label, out_dir):
 
     ax1.bar(x - width / 2, monthly["recurring_income"], width,
             label="Recurring giving (PayPal + Bonterra)", color="#2a9d8f")
-    ax1.bar(x + width / 2, monthly["program_expense"], width,
-            label="Program expense (Imagination Library)", color="#e76f51")
+    ax1.bar(x + width / 2, monthly["program_accrual"], width,
+            label="Program expense (Imagination Library, invoiced)", color="#e76f51")
     ax1.set_title("Monthly Operating Income vs. Expense", fontsize=13, fontweight="bold")
     ax1.set_ylabel("Amount ($)")
     ax1.legend()
@@ -232,11 +238,11 @@ def plot_income_expense_projection(monthly, proj, label, out_dir):
     ax1.axhline(0, color="black", linestyle="--", alpha=0.5)
     _thin_xticks(ax1, all_labels)
 
-    ax2.plot(x_hist, monthly["program_expense"], marker="o", color="#e76f51",
-             linewidth=2, label="Historical program expense")
+    ax2.plot(x_hist, monthly["program_accrual"], marker="o", color="#e76f51",
+             linewidth=2, label="Historical program expense (invoiced)")
     ax2.plot(x_future, proj["exp_proj"], marker="s", color="#9d0208", linewidth=2,
              linestyle="--", label="Projected program expense")
-    ax2.fill_between(x_hist, monthly["program_expense"], alpha=0.25, color="#e76f51")
+    ax2.fill_between(x_hist, monthly["program_accrual"], alpha=0.25, color="#e76f51")
     ax2.fill_between(x_future, proj["exp_proj"], alpha=0.25, color="#9d0208")
     ax2.set_title("Program Expense Projection (Imagination Library mailings)",
                   fontsize=13, fontweight="bold")
@@ -309,12 +315,15 @@ def metric_commands(ledger, period, proj, title):
     grant_total = monthly["grant_income"].sum()
     total_income = monthly["total_income"].sum()
     program_total = monthly["program_expense"].sum()
+    program_accrual_total = monthly["program_accrual"].sum()
     other_total = monthly["other_expense"].sum()
     total_expense = program_total + other_total
     net_change = monthly["net"].sum()
     reserves_end = float(monthly["cash_position"].iloc[-1])
     reserves_start = period["opening_reserves"]
-    op_result = recurring_total - program_total
+    # Operating result compares recurring giving to program cost incurred (accrual),
+    # consistent with the invoiced program figure reported above.
+    op_result = recurring_total - program_accrual_total
 
     grant_rows = lp[lp["category"] == CAT_GRANT]
     program_rows = lp[lp["category"] == CAT_PROGRAM]
@@ -375,47 +384,26 @@ def metric_commands(ledger, period, proj, title):
 # --------------------------------------------------------------------------- #
 # Command values (table rows)
 # --------------------------------------------------------------------------- #
-def actual_kids_by_month():
-    """Map each invoice month (Period[M]) to total children served that month.
-
-    Children served = sum of the age-group book quantities (G1-G6, EN+ES) for the
-    invoice(s) of that month, read from invoices/summary.csv. Enrollment is a
-    monthly stock, so these are NOT summed across months.
-    """
-    path = L.INVOICES_DIR / "summary.csv"
-    if not path.exists():
-        return {}
-    df = pd.read_csv(path)
-    if "month" not in df.columns:
-        return {}
-    q_cols = [c for c in df.columns if c.endswith("_Q")]
-    df = df[df["month"].notna() & (df["month"].astype(str).str.strip() != "")]
-    kids = {}
-    for _, r in df.iterrows():
-        try:
-            p = pd.Period(str(r["month"]), "M")
-        except Exception:
-            continue
-        kids[p] = kids.get(p, 0) + int(df.loc[r.name, q_cols].fillna(0).sum())
-    return kids
-
-
-def _budget_rows(monthly_full):
-    actual_kids = actual_kids_by_month()
+def _budget_rows(invoice_m):
+    """Budget vs. actual rows. Actual kids = children served that month
+    (group + welcome + graduation books mailed); actual cost = the invoiced
+    (accrual) amount for that invoice month. Both come from invoices/summary.csv."""
     rows = []
     tot_bi = 0
     tot_ai = 0.0
     for label, per, bk, bi in ANNUAL_BUDGET:
         p = pd.Period(per, "M")
-        has_actual = p in monthly_full.index and monthly_full.loc[p, "program_expense"] > 0
-        actual_inv = float(monthly_full.loc[p, "program_expense"]) if has_actual else 0.0
-        ak = actual_kids.get(p)
+        in_data = p in invoice_m.index
+        ak = int(invoice_m.loc[p, "kids"]) if in_data else 0
+        ac = float(invoice_m.loc[p, "accrual_cost"]) if in_data else float("nan")
+        has_actual = ak > 0 and pd.notna(ac)
         ak_str = f"{ak:,}" if ak else "---"
-        ai_str = money(actual_inv) if has_actual else "---"
-        var_str = money(bi - actual_inv) if has_actual else "---"
+        ai_str = money(ac) if has_actual else "---"
+        var_str = money(bi - ac) if has_actual else "---"
         rows.append(f"{label} & {bk:,} & {ak_str} & \\${bi:,} & {ai_str} & {var_str} \\\\")
         tot_bi += bi
-        tot_ai += actual_inv
+        if has_actual:
+            tot_ai += ac
     # Kid columns are a monthly stock, not a flow -- no meaningful total.
     total = (f"\\textbf{{Total}} & --- & --- & "
              f"\\textbf{{\\${tot_bi:,}}} & \\textbf{{{money(tot_ai)}}} & \\\\")
@@ -453,13 +441,63 @@ def scenario_reserve_commands(monthly, proj):
     }
 
 
-def budget_commands(monthly_full):
-    brows, btotal = _budget_rows(monthly_full)
+def budget_commands(invoice_m):
+    brows, btotal = _budget_rows(invoice_m)
     return {
         "ilsaBudgetFyLabel": BUDGET_FY_LABEL,
         "ilsaBudgetRows": brows,
         "ilsaBudgetTotal": btotal,
         "ilsaOpexRows": _opex_rows(),
+    }
+
+
+def program_reconciliation_commands(invoice_m, monthly_full, period):
+    """Program cost on both bases: invoiced (accrual) vs. paid (cash, ledger).
+
+    The Dollywood bill is the cost incurred (accrual); bank payments clear about a
+    month later, so cumulative invoiced minus paid is the outstanding payable. This
+    keeps the cash-based reserves intact while reporting the true program cost.
+    """
+    start_p, end_p = period["start"], period["end"]
+    inv_p = invoice_m.loc[(invoice_m.index >= start_p) & (invoice_m.index <= end_p)]
+    paid_col = monthly_full["program_expense"]
+
+    accrual_period = float(inv_p["accrual_cost"].sum(skipna=True))
+    paid_period = float(paid_col.loc[(paid_col.index >= start_p) & (paid_col.index <= end_p)].sum())
+    inv_to_date = float(invoice_m.loc[invoice_m.index <= end_p, "accrual_cost"].sum(skipna=True))
+    paid_to_date = float(paid_col.loc[paid_col.index <= end_p].sum())
+    payable = inv_to_date - paid_to_date
+
+    billed = inv_p[inv_p["accrual_cost"].notna()]
+    kids_billed = float(billed["kids"].sum())
+    per_child = accrual_period / kids_billed if kids_billed else 0.0
+
+    # Scope the per-year reconciliation to the reporting period so its totals
+    # agree with the period figures above (the reporting period can end before
+    # the latest invoice, e.g. an invoice issued after the last bank activity).
+    inv_scoped = invoice_m.loc[invoice_m.index <= end_p]
+    paid_scoped = paid_col.loc[paid_col.index <= end_p]
+    years = sorted({p.year for p in inv_scoped.index} | {p.year for p in paid_scoped.index})
+    rows = []
+    cum_inv = cum_paid = 0.0
+    for y in years:
+        iy = float(inv_scoped.loc[inv_scoped.index.year == y, "accrual_cost"].sum(skipna=True))
+        py = float(paid_scoped.loc[paid_scoped.index.year == y].sum())
+        if iy == 0 and py == 0:
+            continue
+        cum_inv += iy
+        cum_paid += py
+        rows.append(f"{y} & {money(iy)} & {money(py)} & {money(cum_inv - cum_paid)} \\\\")
+    recon_total = (f"\\textbf{{Total}} & \\textbf{{{money(cum_inv)}}} & "
+                   f"\\textbf{{{money(cum_paid)}}} & \\textbf{{{money(cum_inv - cum_paid)}}} \\\\")
+
+    return {
+        "ilsaProgramAccrual": money(accrual_period),
+        "ilsaProgramPaid": money(paid_period),
+        "ilsaProgramPayable": money(payable),
+        "ilsaCostPerChild": f"\\${per_child:.2f}",
+        "ilsaProgramReconRows": "\n".join(rows),
+        "ilsaProgramReconTotal": recon_total,
     }
 
 
@@ -607,11 +645,19 @@ def main():
 
     ledger = load_ledger()
     monthly_full = build_monthly(ledger)
+    invoice_m = invoice_monthly()
+    # Invoiced (accrual) program cost, aligned to the ledger months. This is the
+    # continuous cost-incurred series the figures and projection use; the gappy
+    # cash payments stay in cash_position so reserves still tie to money on hand.
+    monthly_full["program_accrual"] = (
+        invoice_m["accrual_cost"].reindex(monthly_full.index).fillna(0.0)
+    )
     period = resolve_period(monthly_full, year=args.year, start=args.start, end=args.end)
     monthly = period["monthly"]
     print(f"Reporting period: {period['label'].replace('--', ' to ')} ({len(monthly)} months)")
 
-    proj = project_period(monthly, horizon=horizon_to_end(monthly.index[-1]))
+    proj = project_period(monthly, horizon=horizon_to_end(monthly.index[-1]),
+                          expense_col="program_accrual")
     if proj is None:
         print("NOTE: too few months in period to project; skipping projection figures.")
 
@@ -627,8 +673,15 @@ def main():
     print_summary(ledger, period, cmd)
 
     if not args.no_report:
-        cmd.update(budget_commands(monthly_full))
+        cmd.update(budget_commands(invoice_m))
         cmd.update(year_table_commands(monthly_full))
+        cmd.update(program_reconciliation_commands(invoice_m, monthly_full, period))
+        if cohort_explore is not None:
+            try:
+                cmd.update(cohort_explore.build_for_report(FIG_DIR / "cohort"))
+                print(f"  Cohort figures + commands: {FIG_DIR / 'cohort'}/")
+            except Exception as e:
+                print(f"NOTE: cohort assets not generated ({e}).")
         if proj is not None:
             cmd.update(scenario_reserve_commands(monthly, proj))
         write_commands(cmd, REPORT_DIR / "ILSA-commands.tex")

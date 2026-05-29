@@ -12,14 +12,16 @@ Unlike a static mock-up, every grounded number is derived from the ledger:
 * Income Tracker rows      = the real FY transactions (correct dates and amounts).
                             PayPal redacts donor names, so rows are labelled
                             generically by source/type (no identities invented).
-* Actual DPIL invoices     = the real Dollywood Foundation payments, mapped to the
-                            month each payment posted.
+* Actual kids & invoices   = the invoiced (accrual) program model, mapped to the
+                            invoice month -- identical to the fiscal report. Kids =
+                            group + welcome (LETC) + graduation (GRAD) books mailed;
+                            invoice = the full Dollywood bill (books + mailing).
 
-Forward-looking planning inputs that are *not* present in the ledger or the
-fiscal report (the budgeted enrollment ramp, the $100k fundraising goal, and the
-growth-scenario assumptions) are seeded as editable cells, consistent with the
-sample workbook. The $2.60/child program cost is corroborated by the fiscal
-report's "ILSA pays per child served" program-cost dynamic.
+Everything ties to the fiscal report: the same ``ilsa_ledger`` model feeds both,
+so the workbook's actuals, per-child cost (~$2.38), and reserve scenarios cannot
+disagree with the report. Forward-looking planning inputs that are *not* in the
+data (the budgeted enrollment ramp, the $100k fundraising goal) are seeded as
+editable cells, consistent with the sample workbook.
 
 Sheets produced (matching the sample tab order):
     Dashboard | Budget Tracker | Income Tracker | Reserve Scenarios |
@@ -43,12 +45,12 @@ import ilsa_ledger as L
 from ilsa_ledger import (
     CAT_GRANT,
     CAT_INTERNAL,
-    CAT_PROGRAM,
     CAT_RECURRING,
     CAT_REVERSAL,
     SCENARIO_BAND,
     build_monthly,
     horizon_to_end,
+    invoice_monthly,
     load_ledger,
     project_period,
     reserve_scenarios,
@@ -158,33 +160,34 @@ def starting_reserves(monthly, fy_start):
     return float(prior["cash_position"].iloc[-1]) if len(prior) else 0.0
 
 
-def program_actuals_by_month(ledger, fy_start):
-    """Dollywood (DPIL) payment magnitude per FY month, keyed by FY index 0..11."""
+def invoice_actuals_by_month(invoice_m, fy_start):
+    """Per FY-month index 0..11: invoiced (accrual) program cost and children
+    served, from the shared invoice model -- identical to the fiscal report.
+
+    Cost is the invoiced amount for that invoice month (not the bank-payment date),
+    and kids are the full book count (group + LETC + GRAD = pieces mailed)."""
     start = pd.Period(fy_start, "M")
-    prog = ledger[ledger["category"] == CAT_PROGRAM]
-    out = {}
-    for _, r in prog.iterrows():
-        idx = (r["month"] - start).n
-        if 0 <= idx < 12:
-            out[idx] = out.get(idx, 0.0) + abs(r["amount"])
-    return out
+    cost, kids = {}, {}
+    if invoice_m is None or invoice_m.empty:
+        return cost, kids
+    for p in invoice_m.index:
+        idx = (p - start).n
+        if not (0 <= idx < 12):
+            continue
+        ac = invoice_m.loc[p, "accrual_cost"]
+        if pd.notna(ac) and ac > 0:
+            cost[idx] = float(ac)
+        k = int(invoice_m.loc[p, "kids"])
+        if k > 0:
+            kids[idx] = k
+    return cost, kids
 
 
-def latest_enrollment():
-    """Most recent month's enrolled children, from invoices/summary.csv (or None)."""
-    path = L.INVOICES_DIR / "summary.csv"
-    if not path.exists():
+def latest_enrollment(invoice_m):
+    """Children served in the most recent invoice month (group + LETC + GRAD)."""
+    if invoice_m is None or invoice_m.empty:
         return None
-    df = pd.read_csv(path)
-    if "month" not in df.columns:
-        return None
-    df = df[df["month"].notna() & (df["month"].astype(str).str.strip() != "")]
-    if df.empty:
-        return None
-    q_cols = [c for c in df.columns if c.endswith("_Q")]
-    df["kids"] = df[q_cols].sum(axis=1)
-    by_month = df.groupby("month")["kids"].sum()
-    return int(by_month.loc[by_month.index.max()])
+    return int(invoice_m["kids"].iloc[-1])
 
 
 def income_rows(ledger):
@@ -287,7 +290,7 @@ def build_dashboard(ws, monthly, current_kids):
     cell(ws, f"E{tr}", round(reserves, 2), fill=NAVY, color=WHITE, bold=True, align="center", fmt=CUR)
 
 
-def build_budget_tracker(ws, start_funds, prog_actuals):
+def build_budget_tracker(ws, start_funds, cost_actuals, kids_actuals):
     set_widths(ws, [22, 14, 14, 14, 14, 12, 11])
     merged(ws, "A1:G2", "MONTHLY BUDGET TRACKER  ·  Blue cells = data entry",
            fill=NAVY, color=WHITE, bold=True, size=15, align="center")
@@ -313,12 +316,13 @@ def build_budget_tracker(ws, start_funds, prog_actuals):
     for i, mon in enumerate(_FY_MONTHS):
         r = 9 + i
         stripe = STRIPE if i % 2 else WHITE
-        actual = prog_actuals.get(i)
+        cost_a = cost_actuals.get(i)
+        kids_a = kids_actuals.get(i)
         cell(ws, f"A{r}", mon, fill=NAVY, color=WHITE, bold=True, align="center")
         cell(ws, f"B{r}", BUDGET_KIDS[i], fill=stripe, align="center", fmt=NUM)
-        cell(ws, f"C{r}", None, fill=stripe, color=ENTRY, align="center", fmt=NUM)  # actual kids
+        cell(ws, f"C{r}", kids_a, fill=stripe, color=ENTRY, align="center", fmt=NUM)  # invoiced kids
         cell(ws, f"D{r}", BUDGET_INVOICE[i], fill=stripe, align="center", fmt=CUR)
-        cell(ws, f"E{r}", round(actual, 2) if actual is not None else None,
+        cell(ws, f"E{r}", round(cost_a, 2) if cost_a is not None else None,
              fill=stripe, color=ENTRY, align="center", fmt=CUR2)
         cell(ws, f"F{r}", f'=IF(E{r}="","",D{r}-E{r})', fill=stripe, align="center", fmt=CUR)
         cell(ws, f"G{r}", f'=IF(OR(E{r}="",D{r}=0),"",E{r}/D{r})', fill=stripe,
@@ -569,27 +573,35 @@ def main():
     print(f"Loading ledger: {data_path}")
     ledger = load_ledger(data_path)
     monthly = build_monthly(ledger)
+    invoice_m = invoice_monthly()
+    # Invoiced (accrual) program cost, aligned to the ledger months -- the same
+    # series the fiscal report trends, so the reserve scenarios match exactly.
+    monthly["program_accrual"] = (
+        invoice_m["accrual_cost"].reindex(monthly.index).fillna(0.0)
+    )
 
     start_funds = starting_reserves(monthly, args.fy_start)
-    prog_actuals = program_actuals_by_month(ledger, args.fy_start)
+    cost_actuals, kids_actuals = invoice_actuals_by_month(invoice_m, args.fy_start)
     rows = income_rows(ledger)  # full running ledger: all years
     fy_label = fy_label_from(args.fy_start)
 
-    proj = project_period(monthly, horizon=horizon_to_end(monthly.index[-1]))
+    proj = project_period(monthly, horizon=horizon_to_end(monthly.index[-1]),
+                          expense_col="program_accrual")
     future, base, pess, opt = reserve_scenarios(monthly, proj)
 
     print(f"  Fiscal year: {fy_label}")
     print(f"  Starting reserves (computed): ${start_funds:,.2f}")
     print(f"  Income ledger rows (all years): {len(rows)}")
-    print(f"  Months with actual DPIL invoices: {sorted(prog_actuals)}")
+    print(f"  Months with invoiced program cost: {sorted(cost_actuals)}")
     print(f"  Baseline reserves at {future[-1]}: ${base[-1]:,.0f} "
           f"(pess ${pess[-1]:,.0f}, opt ${opt[-1]:,.0f})")
 
     wb = Workbook()
     ws = wb.active
     ws.title = "Dashboard"
-    build_dashboard(ws, monthly, latest_enrollment())
-    build_budget_tracker(wb.create_sheet("Budget Tracker"), start_funds, prog_actuals)
+    build_dashboard(ws, monthly, latest_enrollment(invoice_m))
+    build_budget_tracker(wb.create_sheet("Budget Tracker"), start_funds,
+                         cost_actuals, kids_actuals)
     build_income_tracker(wb.create_sheet("Income Tracker"), rows)
     build_reserve_scenarios(wb.create_sheet("Reserve Scenarios"), future, base, pess, opt)
     build_fundraising_planner(wb.create_sheet("Fundraising Planner"), rows)
